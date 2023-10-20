@@ -43,10 +43,6 @@ class Solution {
 
   };
 
-  enum directions_indexes {
-    right = 0, down = 1, left = 2, up = 3
-  };
-
   enum bot_actions {
     step = 1, turn = 2, look_around = 3, finish = 4, double_turn = 5
   };
@@ -67,10 +63,16 @@ class Solution {
   int time_spent = 0;
   int current_direction_index;
   std::vector<std::vector<int>> maze;
+  bool go_back_flag = false;
 
   int decideAction() {
     int neighbour_state = maze[current_point.y + directions[current_direction_index].y][current_point.x
         + directions[current_direction_index].x];
+    if (go_back_flag) {
+      go_back_flag = !newPathAvailable();
+      current_point += directions[current_direction_index];
+      return step;
+    }
     if (neighbour_state == unknown) {
       return look_around;
     }
@@ -82,11 +84,12 @@ class Solution {
       current_direction_index = (current_direction_index + 1) % (int) directions.size();
       return turn;
     }
-    if (newPathAvailable()) {
+    if (neighbour_state == visited && newPathAvailable()) {
       current_direction_index = (current_direction_index + 1) % (int) directions.size();
       return turn;
-    } else {
+    } else if (neighbour_state == visited) {
       current_direction_index = (current_direction_index + 2) % (int) directions.size();
+      go_back_flag = true;
       return double_turn;
     }
     return finish;
@@ -167,7 +170,7 @@ class Solution {
         std::cout << look_around << std::endl;
         updateMaze();
         time_spent += look_around_time;
-      } else if (decided_action == finish){
+      } else if (decided_action == finish) {
         finished_flag = true;
         std::cout << finish << std::endl;
         std::cout << time_spent << std::endl;
